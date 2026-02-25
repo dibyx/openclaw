@@ -1,0 +1,68 @@
+name: Build iOS IPA
+
+on:
+  workflow_dispatch:
+  release:
+    types: [created]
+
+jobs:
+  build_ios:
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install xcodegen
+        run: brew install xcodegen
+
+      - name: Generate Xcode Project
+        run: |
+          cd apps/ios
+          export OPENCLAW_IOS_CODE_SIGN_STYLE=Manual
+          ../../scripts/ios-configure-signing.sh || true
+          xcodegen generate
+
+      - name: Build unsigned .app
+        run: |
+          cd apps/ios
+          xcodebuild clean build \
+            -project OpenClaw.xcodeproj \
+            -scheme OpenClaw \
+            -configuration Release \
+            -sdk iphoneos \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            -derivedDataPath build
+
+      - name: Package into .ipa
+        run: |
+          cd apps/ios
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/OpenClaw.app Payload/
+          zip -qr OpenClaw.ipa Payload
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenClaw-iOS
+          path: apps/ios/OpenClaw.ipa
+
+      - name: Upload to Release
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: apps/ios/OpenClaw.ipa

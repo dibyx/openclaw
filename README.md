@@ -295,11 +295,16 @@ If you plan to build/run companion apps, follow the platform runbooks below.
 
 Note: signed builds required for macOS permissions to stick across rebuilds (see `docs/mac/permissions.md`).
 
-### iOS node (optional)
+### iOS / iPadOS node
 
 - Pairs as a node via the Bridge.
 - Voice trigger forwarding + Canvas surface.
 - Controlled via `openclaw nodes …`.
+- **Free Direct Download**: You can easily run OpenClaw on iOS for free without a paid Apple Developer Account!
+  1. Go to the [Releases](../../releases) tab of this repository.
+  2. Download the `OpenClaw.ipa` file attached to the latest release.
+  3. Sideload the app to your iPhone or iPad using a free tool like [AltStore](https://altstore.io/) or [Sideloadly](https://sideloadly.io/).
+  4. Ensure your OpenClaw Gateway is running on your local PC or a free cloud tier, then connect the iOS app to your Gateway IP.
 
 Runbook: [iOS connect](https://docs.openclaw.ai/platforms/ios).
 
