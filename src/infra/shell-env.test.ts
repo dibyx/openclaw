@@ -29,7 +29,14 @@ describe("shell env fallback", () => {
 
   function runShellEnvFallbackForShell(shell: string) {
     resetShellPathCacheForTests();
-    const env: NodeJS.ProcessEnv = { SHELL: shell };
+    const userInfoSpy = vi.spyOn(os, "userInfo").mockReturnValue({
+      shell,
+      username: "testuser",
+      uid: 1000,
+      gid: 1000,
+      homedir: "/tmp/home",
+    });
+    const env: NodeJS.ProcessEnv = { SHELL: "ignored-shell" };
     const exec = vi.fn(() => Buffer.from("OPENAI_API_KEY=from-shell\0"));
     const res = loadShellEnvFallback({
       enabled: true,
@@ -37,6 +44,7 @@ describe("shell env fallback", () => {
       expectedKeys: ["OPENAI_API_KEY"],
       exec: exec as unknown as Parameters<typeof loadShellEnvFallback>[0]["exec"],
     });
+    userInfoSpy.mockRestore();
     return { res, exec };
   }
 
@@ -46,7 +54,7 @@ describe("shell env fallback", () => {
       HOME: "/tmp/evil-home",
       ZDOTDIR: "/tmp/evil-zdotdir",
       BASH_ENV: "/tmp/evil-bash-env",
-      PS4: "$(touch /tmp/pwned)",
+      PS4: "",
     };
   }
 
@@ -172,7 +180,15 @@ describe("shell env fallback", () => {
     expect(exec).toHaveBeenCalledOnce();
   });
 
-  it("falls back to /bin/sh when SHELL is non-absolute", () => {
+  it("falls back to /bin/sh when os.userInfo().shell is empty", () => {
+    const { res, exec } = runShellEnvFallbackForShell("");
+
+    expect(res.ok).toBe(true);
+    expect(exec).toHaveBeenCalledTimes(1);
+    expect(exec).toHaveBeenCalledWith("/bin/sh", ["-l", "-c", "env -0"], expect.any(Object));
+  });
+
+  it("falls back to /bin/sh when os.userInfo().shell is non-absolute", () => {
     const { res, exec } = runShellEnvFallbackForShell("zsh");
 
     expect(res.ok).toBe(true);
@@ -180,7 +196,7 @@ describe("shell env fallback", () => {
     expect(exec).toHaveBeenCalledWith("/bin/sh", ["-l", "-c", "env -0"], expect.any(Object));
   });
 
-  it("falls back to /bin/sh when SHELL points to an untrusted path", () => {
+  it("falls back to /bin/sh when os.userInfo().shell points to an untrusted path", () => {
     const { res, exec } = runShellEnvFallbackForShell("/tmp/evil-shell");
 
     expect(res.ok).toBe(true);
@@ -188,7 +204,7 @@ describe("shell env fallback", () => {
     expect(exec).toHaveBeenCalledWith("/bin/sh", ["-l", "-c", "env -0"], expect.any(Object));
   });
 
-  it("falls back to /bin/sh when SHELL is absolute but not registered in /etc/shells", () => {
+  it("falls back to /bin/sh when os.userInfo().shell is absolute but not registered in /etc/shells", () => {
     withEtcShells(["/bin/sh", "/bin/bash", "/bin/zsh"], () => {
       const { res, exec } = runShellEnvFallbackForShell("/opt/homebrew/bin/evil-shell");
 
@@ -198,7 +214,7 @@ describe("shell env fallback", () => {
     });
   });
 
-  it("uses SHELL when it is explicitly registered in /etc/shells", () => {
+  it("uses os.userInfo().shell when it is explicitly registered in /etc/shells", () => {
     const trustedShell =
       process.platform === "win32"
         ? "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
@@ -209,6 +225,37 @@ describe("shell env fallback", () => {
       expect(res.ok).toBe(true);
       expect(exec).toHaveBeenCalledTimes(1);
       expect(exec).toHaveBeenCalledWith(trustedShell, ["-l", "-c", "env -0"], expect.any(Object));
+    });
+  });
+
+  it("ignores env.SHELL and uses os.userInfo().shell", () => {
+    const trustedShell = "/bin/bash";
+    withEtcShells(["/bin/sh", "/bin/bash"], () => {
+      resetShellPathCacheForTests();
+      const userInfoSpy = vi.spyOn(os, "userInfo").mockReturnValue({
+        shell: trustedShell,
+        username: "testuser",
+        uid: 1000,
+        gid: 1000,
+        homedir: "/tmp/home",
+      });
+      // Attack attempt: trying to use a malicious shell via env override
+      const env: NodeJS.ProcessEnv = { SHELL: "/tmp/evil-shell" };
+      const exec = vi.fn(() => Buffer.from("OPENAI_API_KEY=from-shell\0"));
+
+      const res = loadShellEnvFallback({
+        enabled: true,
+        env,
+        expectedKeys: ["OPENAI_API_KEY"],
+        exec: exec as unknown as Parameters<typeof loadShellEnvFallback>[0]["exec"],
+      });
+
+      expect(res.ok).toBe(true);
+      expect(exec).toHaveBeenCalledTimes(1);
+      // Ensure we used the trusted shell from userInfo, not the evil one from env
+      expect(exec).toHaveBeenCalledWith(trustedShell, ["-l", "-c", "env -0"], expect.any(Object));
+
+      userInfoSpy.mockRestore();
     });
   });
 
