@@ -143,7 +143,6 @@ type GrokSearchResponse = {
       end_index?: number;
     }>;
   }>;
-  output_text?: string; // deprecated field - kept for backwards compatibility
   citations?: string[];
   inline_citations?: Array<{
     start_index: number;
@@ -225,9 +224,7 @@ function extractGrokContent(data: GrokSearchResponse): {
       return { text: output.text, annotationCitations: [...new Set(urls)] };
     }
   }
-  // Fallback: deprecated output_text field
-  const text = typeof data.output_text === "string" ? data.output_text : undefined;
-  return { text, annotationCitations: [] };
+  return { text: undefined, annotationCitations: [] };
 }
 
 type GeminiConfig = {

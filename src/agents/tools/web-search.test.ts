@@ -235,11 +235,6 @@ describe("web_search grok response parsing", () => {
     expect(result.annotationCitations).toEqual(["https://example.com/a", "https://example.com/b"]);
   });
 
-  it("falls back to deprecated output_text", () => {
-    const result = extractGrokContent({ output_text: "hello from output_text" });
-    expect(result.text).toBe("hello from output_text");
-    expect(result.annotationCitations).toEqual([]);
-  });
 
   it("returns undefined text when no content found", () => {
     const result = extractGrokContent({});
