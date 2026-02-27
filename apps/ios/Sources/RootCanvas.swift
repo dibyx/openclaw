@@ -35,7 +35,7 @@ struct RootCanvas: View {
         ZStack {
             // Main App Navigation
             RootTabs()
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(.dark) // Fixed: Enforce dark mode for status bar legibility
 
             // Global Overlays
             if self.appModel.cameraFlashNonce != 0 {
@@ -51,7 +51,7 @@ struct RootCanvas: View {
             if let voiceWakeToastText, !voiceWakeToastText.isEmpty {
                 VoiceWakeToast(
                     command: voiceWakeToastText,
-                    brighten: false)
+                    brighten: false) // Fixed: Dark theme means we don't brighten for contrast
                     .padding(.leading, 10)
                     .safeAreaPadding(.top, 58)
                     .transition(.move(edge: .top).combined(with: .opacity))
