@@ -66,6 +66,18 @@ export function evaluateMissingDeviceIdentity(params: {
   if (params.isControlUi && params.trustedProxyAuthOk) {
     return { kind: "allow" };
   }
+
+  // Security Fix: dangerouslyDisableDeviceAuth must only be honored for local clients.
+  // This prevents remote attackers from bypassing device identity checks even if
+  // the user has enabled this dangerous flag (often for local dev convenience).
+  if (
+    params.isControlUi &&
+    params.controlUiAuthPolicy.dangerouslyDisableDeviceAuth &&
+    !params.isLocalClient
+  ) {
+    return { kind: "reject-control-ui-insecure-auth" };
+  }
+
   if (params.isControlUi && !params.controlUiAuthPolicy.allowBypass) {
     // Allow localhost Control UI connections when allowInsecureAuth is configured.
     // Localhost has no network interception risk, and browser SubtleCrypto
