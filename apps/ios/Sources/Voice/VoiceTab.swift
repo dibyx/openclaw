@@ -24,6 +24,7 @@ struct VoiceTab: View {
                     gateway: self.appModel.gatewayServerName != nil ? .connected : .disconnected,
                     voiceWakeEnabled: self.voiceWakeEnabled,
                     activity: nil)
+                    .animation(.snappy, value: self.appModel.gatewayServerName)
             }
             .padding()
             .background(Color.openClawSurface)
@@ -36,16 +37,20 @@ struct VoiceTab: View {
                             .font(.callout)
                             .foregroundStyle(Color.openClawSecondaryText)
                             .padding(.top, 40)
+                            .transition(.opacity)
                     } else {
                         Text("Tap the mic and speak.\nEach pause sends a turn automatically.")
                             .font(.callout)
                             .foregroundStyle(Color.openClawSecondaryText)
                             .multilineTextAlignment(.center)
                             .padding(.top, 40)
+                            .transition(.opacity)
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
+                .animation(.easeInOut, value: self.voiceWakeEnabled)
+                .animation(.easeInOut, value: self.talkEnabled)
             }
             .background(Color.openClawBackground)
 
@@ -60,6 +65,7 @@ struct VoiceTab: View {
                         .padding(.vertical, 6)
                         .background(Color.openClawSurface)
                         .clipShape(Capsule())
+                        .animation(.snappy, value: self.statusText)
                 }
 
                 // Mic Button with Waveform
@@ -67,10 +73,13 @@ struct VoiceTab: View {
                     if self.voiceWake.isListening || self.appModel.talkMode.isEnabled {
                         MicWaveformRing(level: self.voiceWake.inputLevel)
                             .frame(width: 120, height: 120)
+                            .transition(.scale.combined(with: .opacity))
                     }
 
                     Button {
-                        self.toggleMic()
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            self.toggleMic()
+                        }
                     } label: {
                         Image(systemName: self.isMicActive ? "mic.slash.fill" : "mic.fill")
                             .font(.system(size: 32))
@@ -79,6 +88,7 @@ struct VoiceTab: View {
                             .background(self.isMicActive ? Color.red : Color.openClawAccent)
                             .clipShape(Circle())
                             .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+                            .contentTransition(.symbolEffect(.replace))
                     }
                 }
                 .padding(.bottom, 20)
@@ -86,9 +96,10 @@ struct VoiceTab: View {
                 Text(self.isMicActive ? "Tap to stop" : "Tap to speak")
                     .font(.callout)
                     .foregroundStyle(Color.openClawSecondaryText)
+                    .animation(.easeInOut, value: self.isMicActive)
             }
             .padding()
-            .background(Color.openClawBackground) // Blend with main bg or use surface if preferred
+            .background(Color.openClawBackground)
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: 24, topTrailingRadius: 24))
             .shadow(color: .black.opacity(0.05), radius: 10, y: -5)
         }
@@ -112,7 +123,7 @@ struct VoiceTab: View {
     private func toggleMic() {
         let next = !self.isMicActive
         self.voiceWakeEnabled = next
-        self.talkEnabled = next // Sync for simplicity in this UI
+        self.talkEnabled = next
         self.appModel.setVoiceWakeEnabled(next)
         self.appModel.setTalkEnabled(next)
     }
@@ -120,7 +131,6 @@ struct VoiceTab: View {
 
 struct MicWaveformRing: View {
     let level: Float
-    @State private var phase: CGFloat = 0
 
     var body: some View {
         ZStack {
@@ -128,6 +138,7 @@ struct MicWaveformRing: View {
                 .stroke(Color.openClawAccent.opacity(0.3), lineWidth: 4)
                 .scaleEffect(1 + CGFloat(level) * 0.5)
                 .opacity(1 - Double(level))
+                .animation(.linear(duration: 0.1), value: level)
         }
     }
 }

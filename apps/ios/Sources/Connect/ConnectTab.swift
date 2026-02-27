@@ -11,7 +11,8 @@ struct ConnectTab: View {
     @AppStorage("gateway.setupCode") private var setupCode: String = ""
     @AppStorage("node.instanceId") private var instanceId: String = UUID().uuidString
 
-    @State private var gatewayExpanded: Bool = false
+    // Expanded by default
+    @State private var gatewayExpanded: Bool = true
     @State private var connecting: Bool = false
     @State private var connectingGatewayID: String?
     @State private var connectError: String?
@@ -55,10 +56,12 @@ struct ConnectTab: View {
                     }
 
                     Button {
-                        if self.isGatewayConnected {
-                            self.appModel.disconnectGateway()
-                        } else {
-                            Task { await self.connectManual() }
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            if self.isGatewayConnected {
+                                self.appModel.disconnectGateway()
+                            } else {
+                                Task { await self.connectManual() }
+                            }
                         }
                     } label: {
                         HStack {
@@ -77,6 +80,7 @@ struct ConnectTab: View {
                         .background(self.isGatewayConnected ? Color.red : Color.openClawAccent)
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 18))
+                        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
                     }
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
@@ -87,6 +91,7 @@ struct ConnectTab: View {
                             .font(.caption)
                             .foregroundStyle(.red)
                             .listRowBackground(Color.clear)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
                     DisclosureGroup(
@@ -104,7 +109,9 @@ struct ConnectTab: View {
                                         .autocorrectionDisabled()
 
                                     Button("Apply") {
-                                        self.applySetupCode()
+                                        withAnimation {
+                                            self.applySetupCode()
+                                        }
                                     }
                                     .buttonStyle(.bordered)
                                     .disabled(self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -114,6 +121,7 @@ struct ConnectTab: View {
                                     Text(status)
                                         .font(.caption)
                                         .foregroundStyle(status.lowercased().contains("failed") ? .red : Color.openClawSecondaryText)
+                                        .transition(.opacity)
                                 }
 
                                 Divider()
@@ -232,14 +240,18 @@ struct ConnectTab: View {
     }
 
     private func connectManual() async {
-        self.connecting = true
-        self.connectError = nil
+        withAnimation {
+            self.connecting = true
+            self.connectError = nil
+        }
         self.manualGatewayEnabled = true
 
         // Basic validation
         guard !self.manualGatewayHost.isEmpty else {
-            self.connectError = "Host is required"
-            self.connecting = false
+            withAnimation {
+                self.connectError = "Host is required"
+                self.connecting = false
+            }
             return
         }
 
@@ -250,10 +262,11 @@ struct ConnectTab: View {
 
         // Wait a beat for status update
         try? await Task.sleep(nanoseconds: 500_000_000)
-        self.connecting = false
-
-        if !self.isGatewayConnected {
-             self.connectError = self.appModel.gatewayStatusText
+        withAnimation {
+            self.connecting = false
+            if !self.isGatewayConnected {
+                 self.connectError = self.appModel.gatewayStatusText
+            }
         }
     }
 
