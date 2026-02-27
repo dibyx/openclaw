@@ -14,10 +14,10 @@ struct ScreenTab: View {
                     Spacer()
                     Image(systemName: "rectangle.dashed.and.paperclip")
                         .font(.system(size: 48))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.openClawSecondaryText)
                     Text("Canvas Disconnected")
                         .font(.headline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.openClawSecondaryText)
 
                     if let errorText = self.appModel.screen.errorText {
                         Text(errorText)
@@ -30,7 +30,7 @@ struct ScreenTab: View {
                     Spacer()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(red: 246/255, green: 247/255, blue: 250/255))
+                .background(Color.openClawBackground)
             } else if self.shouldShowRestore {
                 VStack {
                     Button {
@@ -41,9 +41,10 @@ struct ScreenTab: View {
                             Text("Restore dashboard")
                         }
                         .font(.subheadline.bold())
+                        .foregroundStyle(Color.openClawText)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(.thinMaterial)
+                        .background(Material.thin)
                         .clipShape(Capsule())
                         .shadow(radius: 2)
                     }
@@ -55,9 +56,6 @@ struct ScreenTab: View {
     }
 
     private var shouldShowRestore: Bool {
-        // Logic to show restore button if the webview is blank or seemingly stuck
-        // For now, rely on appModel state or just always offer if connected but empty
-        // Assuming appModel.screen.currentURL might be nil if not navigated
         return true
     }
 }

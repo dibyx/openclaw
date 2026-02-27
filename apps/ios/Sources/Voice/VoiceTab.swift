@@ -13,10 +13,11 @@ struct VoiceTab: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("VOICE")
                         .font(.caption.bold())
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color.openClawAccent)
                         .tracking(1)
                     Text("Voice mode")
                         .font(.title2.bold())
+                        .foregroundStyle(Color.openClawText)
                 }
                 Spacer()
                 StatusPill(
@@ -25,20 +26,20 @@ struct VoiceTab: View {
                     activity: nil)
             }
             .padding()
-            .background(Color(red: 246/255, green: 247/255, blue: 250/255)) // Surface
+            .background(Color.openClawSurface)
 
-            // Conversation Area (Placeholder for now as we don't have full history access in VoiceWakeManager)
+            // Conversation Area
             ScrollView {
                 VStack(spacing: 20) {
                     if !self.voiceWakeEnabled && !self.talkEnabled {
                         Text("Enable Voice Wake or Talk Mode to start.")
                             .font(.callout)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.openClawSecondaryText)
                             .padding(.top, 40)
                     } else {
                         Text("Tap the mic and speak.\nEach pause sends a turn automatically.")
                             .font(.callout)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.openClawSecondaryText)
                             .multilineTextAlignment(.center)
                             .padding(.top, 40)
                     }
@@ -46,7 +47,7 @@ struct VoiceTab: View {
                 .frame(maxWidth: .infinity)
                 .padding()
             }
-            .background(Color(red: 255/255, green: 255/255, blue: 255/255)) // White background
+            .background(Color.openClawBackground)
 
             // Bottom Controls
             VStack(spacing: 16) {
@@ -54,10 +55,10 @@ struct VoiceTab: View {
                 HStack(spacing: 6) {
                     Text(self.statusText)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.openClawSecondaryText)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Color(red: 246/255, green: 247/255, blue: 250/255))
+                        .background(Color.openClawSurface)
                         .clipShape(Capsule())
                 }
 
@@ -75,7 +76,7 @@ struct VoiceTab: View {
                             .font(.system(size: 32))
                             .foregroundStyle(.white)
                             .frame(width: 80, height: 80)
-                            .background(self.isMicActive ? Color.red : Color.blue)
+                            .background(self.isMicActive ? Color.red : Color.openClawAccent)
                             .clipShape(Circle())
                             .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
                     }
@@ -84,14 +85,14 @@ struct VoiceTab: View {
 
                 Text(self.isMicActive ? "Tap to stop" : "Tap to speak")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.openClawSecondaryText)
             }
             .padding()
-            .background(Color.white)
+            .background(Color.openClawBackground) // Blend with main bg or use surface if preferred
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: 24, topTrailingRadius: 24))
             .shadow(color: .black.opacity(0.05), radius: 10, y: -5)
         }
-        .background(Color(red: 246/255, green: 247/255, blue: 250/255))
+        .background(Color.openClawBackground)
     }
 
     private var isMicActive: Bool {
@@ -124,7 +125,7 @@ struct MicWaveformRing: View {
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Color.blue.opacity(0.3), lineWidth: 4)
+                .stroke(Color.openClawAccent.opacity(0.3), lineWidth: 4)
                 .scaleEffect(1 + CGFloat(level) * 0.5)
                 .opacity(1 - Double(level))
         }

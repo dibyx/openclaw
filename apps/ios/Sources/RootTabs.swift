@@ -38,5 +38,6 @@ struct RootTabs: View {
                 }
                 .tag(4)
         }
+        .accentColor(Color.openClawAccent)
     }
 }
