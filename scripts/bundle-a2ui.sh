@@ -86,7 +86,12 @@ if [[ -f "$HASH_FILE" ]]; then
 fi
 
 pnpm -s exec tsc -p "$A2UI_RENDERER_DIR/tsconfig.json"
-if command -v rolldown >/dev/null 2>&1; then
+
+# Prefer locally installed rolldown via pnpm exec (if present in devDependencies)
+# or global rolldown, falling back to dlx if needed.
+if pnpm exec rolldown --version >/dev/null 2>&1; then
+  pnpm exec rolldown -c "$A2UI_APP_DIR/rolldown.config.mjs"
+elif command -v rolldown >/dev/null 2>&1; then
   rolldown -c "$A2UI_APP_DIR/rolldown.config.mjs"
 else
   pnpm -s dlx rolldown -c "$A2UI_APP_DIR/rolldown.config.mjs"
