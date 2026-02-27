@@ -390,69 +390,79 @@ export async function discoverAllSessions(params?: {
   const sessionsDir = resolveSessionTranscriptsDirForAgent(params?.agentId);
   const entries = await fs.promises.readdir(sessionsDir, { withFileTypes: true }).catch(() => []);
 
+  // Filter valid jsonl entries first
+  const validEntries = entries.filter((entry) => entry.isFile() && entry.name.endsWith(".jsonl"));
+
+  // Fetch stats in parallel
+  const entriesWithStats = await Promise.all(
+    validEntries.map(async (entry) => {
+      const filePath = path.join(sessionsDir, entry.name);
+      const stats = await fs.promises.stat(filePath).catch(() => null);
+      if (!stats) {
+        return null;
+      }
+      if (params?.startMs && stats.mtimeMs < params.startMs) {
+        return null;
+      }
+      return { entry, filePath, stats };
+    }),
+  );
+
   const discovered: DiscoveredSession[] = [];
+  const filesToProcess = entriesWithStats.filter((item): item is NonNullable<typeof item> => Boolean(item));
 
-  for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith(".jsonl")) {
-      continue;
-    }
+  // Process files in batches to avoid EMFILE errors
+  const BATCH_SIZE = 50;
+  for (let i = 0; i < filesToProcess.length; i += BATCH_SIZE) {
+    const batch = filesToProcess.slice(i, i + BATCH_SIZE);
 
-    const filePath = path.join(sessionsDir, entry.name);
-    const stats = await fs.promises.stat(filePath).catch(() => null);
-    if (!stats) {
-      continue;
-    }
-
-    // Filter by date range if provided
-    if (params?.startMs && stats.mtimeMs < params.startMs) {
-      continue;
-    }
-    // Do not exclude by endMs: a session can have activity in range even if it continued later.
-
-    // Extract session ID from filename (remove .jsonl)
-    const sessionId = entry.name.slice(0, -6);
-
-    // Try to read first user message for label extraction
-    let firstUserMessage: string | undefined;
-    try {
-      for await (const parsed of readJsonlRecords(filePath)) {
+    const results = await Promise.all(
+      batch.map(async ({ entry, filePath, stats }) => {
+        const sessionId = entry.name.slice(0, -6);
+        let firstUserMessage: string | undefined;
         try {
-          const message = parsed.message as Record<string, unknown> | undefined;
-          if (message?.role === "user") {
-            const content = message.content;
-            if (typeof content === "string") {
-              firstUserMessage = content.slice(0, 100);
-            } else if (Array.isArray(content)) {
-              for (const block of content) {
-                if (
-                  typeof block === "object" &&
-                  block &&
-                  (block as Record<string, unknown>).type === "text"
-                ) {
-                  const text = (block as Record<string, unknown>).text;
-                  if (typeof text === "string") {
-                    firstUserMessage = text.slice(0, 100);
+          for await (const parsed of readJsonlRecords(filePath)) {
+            try {
+              const message = parsed.message as Record<string, unknown> | undefined;
+              if (message?.role === "user") {
+                const content = message.content;
+                if (typeof content === "string") {
+                  firstUserMessage = content.slice(0, 100);
+                } else if (Array.isArray(content)) {
+                  for (const block of content) {
+                    if (
+                      typeof block === "object" &&
+                      block &&
+                      (block as Record<string, unknown>).type === "text"
+                    ) {
+                      const text = (block as Record<string, unknown>).text;
+                      if (typeof text === "string") {
+                        firstUserMessage = text.slice(0, 100);
+                      }
+                      break;
+                    }
                   }
-                  break;
                 }
+                break; // Found first user message
               }
+            } catch {
+              // Skip malformed lines
             }
-            break; // Found first user message
           }
         } catch {
-          // Skip malformed lines
+          // Ignore read errors
         }
-      }
-    } catch {
-      // Ignore read errors
-    }
 
-    discovered.push({
-      sessionId,
-      sessionFile: filePath,
-      mtime: stats.mtimeMs,
-      firstUserMessage,
-    });
+        return {
+          sessionId,
+          sessionFile: filePath,
+          mtime: stats.mtimeMs,
+          firstUserMessage,
+        };
+      })
+    );
+
+    discovered.push(...results);
   }
 
   // Sort by mtime descending (most recent first)
