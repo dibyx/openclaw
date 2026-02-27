@@ -87,11 +87,21 @@ struct ConnectTab: View {
                     .padding(.vertical, 8)
 
                     if let error = self.connectError {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                            .listRowBackground(Color.clear)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(error)
+                                .font(.caption)
+                                .foregroundStyle(.red)
+
+                            // Restore helpful hint logic
+                            if error.localizedCaseInsensitiveContains("timed out") ||
+                               error.localizedCaseInsensitiveContains("host is down") {
+                                Text("Check if Tailscale is connected.")
+                                    .font(.caption2)
+                                    .foregroundStyle(Color.openClawSecondaryText)
+                            }
+                        }
+                        .listRowBackground(Color.clear)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
                     DisclosureGroup(

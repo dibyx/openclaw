@@ -60,6 +60,9 @@ struct RootTabs: View {
                 .tag(4)
         }
         .accentColor(Color.openClawAccent)
-        .animation(.default, value: self.selectedTab) // Smooth tab switching
+        .animation(.default, value: self.selectedTab)
+        .onChange(of: self.appModel.openChatRequestID) { _, _ in
+            self.selectedTab = 1
+        }
     }
 }
