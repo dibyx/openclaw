@@ -18,16 +18,16 @@ jobs:
         with:
           path: swabble
 
-      - name: Select Xcode 26.1 (prefer 26.1.1)
+      - name: Select Xcode 16.1 (prefer 16.1.1)
         run: |
           set -euo pipefail
-          # pick the newest installed 26.1.x, fallback to newest 26.x
-          CANDIDATE="$(ls -d /Applications/Xcode_26.1*.app 2>/dev/null | sort -V | tail -1 || true)"
+          # pick the newest installed 16.1.x, fallback to newest 16.x
+          CANDIDATE="$(ls -d /Applications/Xcode_16.1*.app 2>/dev/null | sort -V | tail -1 || true)"
           if [[ -z "$CANDIDATE" ]]; then
-            CANDIDATE="$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1 || true)"
+            CANDIDATE="$(ls -d /Applications/Xcode_16*.app 2>/dev/null | sort -V | tail -1 || true)"
           fi
           if [[ -z "$CANDIDATE" ]]; then
-            echo "No Xcode 26.x found on runner" >&2
+            echo "No Xcode 16.x found on runner" >&2
             exit 1
           fi
           echo "Selecting $CANDIDATE"

@@ -543,9 +543,9 @@ jobs:
         run: pnpm test
 
       # --- Xcode/Swift setup ---
-      - name: Select Xcode 26.1
+      - name: Select Xcode 16.1
         run: |
-          sudo xcode-select -s /Applications/Xcode_26.1.app
+          sudo xcode-select -s /Applications/Xcode_16.1.app
           xcodebuild -version
 
       - name: Install XcodeGen / SwiftLint / SwiftFormat
@@ -595,7 +595,8 @@ jobs:
           exit 1
 
   ios:
-    if: false # ignore iOS in CI for now
+    needs: [docs-scope, changed-scope, check]
+    if: needs.docs-scope.outputs.docs_only != 'true' && (github.event_name == 'push' || needs.changed-scope.outputs.run_macos == 'true')
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -603,9 +604,9 @@ jobs:
         with:
           submodules: false
 
-      - name: Select Xcode 26.1
+      - name: Select Xcode 16.1
         run: |
-          sudo xcode-select -s /Applications/Xcode_26.1.app
+          sudo xcode-select -s /Applications/Xcode_16.1.app
           xcodebuild -version
 
       - name: Install XcodeGen
