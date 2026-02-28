@@ -13,40 +13,46 @@ struct VoiceTab: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("VOICE")
                         .font(.caption.bold())
-                        .foregroundStyle(.blue)
+                        .foregroundStyle(Color.openClawAccent)
                         .tracking(1)
                     Text("Voice mode")
                         .font(.title2.bold())
+                        .foregroundStyle(Color.openClawText)
                 }
                 Spacer()
                 StatusPill(
                     gateway: self.appModel.gatewayServerName != nil ? .connected : .disconnected,
                     voiceWakeEnabled: self.voiceWakeEnabled,
                     activity: nil)
+                    .animation(.snappy, value: self.appModel.gatewayServerName)
             }
             .padding()
-            .background(Color(red: 246/255, green: 247/255, blue: 250/255)) // Surface
+            .background(Color.openClawSurface)
 
-            // Conversation Area (Placeholder for now as we don't have full history access in VoiceWakeManager)
+            // Conversation Area
             ScrollView {
                 VStack(spacing: 20) {
                     if !self.voiceWakeEnabled && !self.talkEnabled {
                         Text("Enable Voice Wake or Talk Mode to start.")
                             .font(.callout)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.openClawSecondaryText)
                             .padding(.top, 40)
+                            .transition(.opacity)
                     } else {
                         Text("Tap the mic and speak.\nEach pause sends a turn automatically.")
                             .font(.callout)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.openClawSecondaryText)
                             .multilineTextAlignment(.center)
                             .padding(.top, 40)
+                            .transition(.opacity)
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
+                .animation(.easeInOut, value: self.voiceWakeEnabled)
+                .animation(.easeInOut, value: self.talkEnabled)
             }
-            .background(Color(red: 255/255, green: 255/255, blue: 255/255)) // White background
+            .background(Color.openClawBackground)
 
             // Bottom Controls
             VStack(spacing: 16) {
@@ -54,11 +60,12 @@ struct VoiceTab: View {
                 HStack(spacing: 6) {
                     Text(self.statusText)
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.openClawSecondaryText)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Color(red: 246/255, green: 247/255, blue: 250/255))
+                        .background(Color.openClawSurface)
                         .clipShape(Capsule())
+                        .animation(.snappy, value: self.statusText)
                 }
 
                 // Mic Button with Waveform
@@ -66,32 +73,37 @@ struct VoiceTab: View {
                     if self.voiceWake.isListening || self.appModel.talkMode.isEnabled {
                         MicWaveformRing(level: self.voiceWake.inputLevel)
                             .frame(width: 120, height: 120)
+                            .transition(.scale.combined(with: .opacity))
                     }
 
                     Button {
-                        self.toggleMic()
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                            self.toggleMic()
+                        }
                     } label: {
                         Image(systemName: self.isMicActive ? "mic.slash.fill" : "mic.fill")
                             .font(.system(size: 32))
                             .foregroundStyle(.white)
                             .frame(width: 80, height: 80)
-                            .background(self.isMicActive ? Color.red : Color.blue)
+                            .background(self.isMicActive ? Color.red : Color.openClawAccent)
                             .clipShape(Circle())
                             .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+                            .contentTransition(.symbolEffect(.replace))
                     }
                 }
                 .padding(.bottom, 20)
 
                 Text(self.isMicActive ? "Tap to stop" : "Tap to speak")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.openClawSecondaryText)
+                    .animation(.easeInOut, value: self.isMicActive)
             }
             .padding()
-            .background(Color.white)
+            .background(Color.openClawBackground)
             .clipShape(UnevenRoundedRectangle(topLeadingRadius: 24, topTrailingRadius: 24))
             .shadow(color: .black.opacity(0.05), radius: 10, y: -5)
         }
-        .background(Color(red: 246/255, green: 247/255, blue: 250/255))
+        .background(Color.openClawBackground)
     }
 
     private var isMicActive: Bool {
@@ -111,7 +123,7 @@ struct VoiceTab: View {
     private func toggleMic() {
         let next = !self.isMicActive
         self.voiceWakeEnabled = next
-        self.talkEnabled = next // Sync for simplicity in this UI
+        self.talkEnabled = next
         self.appModel.setVoiceWakeEnabled(next)
         self.appModel.setTalkEnabled(next)
     }
@@ -119,14 +131,14 @@ struct VoiceTab: View {
 
 struct MicWaveformRing: View {
     let level: Float
-    @State private var phase: CGFloat = 0
 
     var body: some View {
         ZStack {
             Circle()
-                .stroke(Color.blue.opacity(0.3), lineWidth: 4)
+                .stroke(Color.openClawAccent.opacity(0.3), lineWidth: 4)
                 .scaleEffect(1 + CGFloat(level) * 0.5)
                 .opacity(1 - Double(level))
+                .animation(.linear(duration: 0.1), value: level)
         }
     }
 }

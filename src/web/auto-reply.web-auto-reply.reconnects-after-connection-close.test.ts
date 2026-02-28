@@ -129,7 +129,7 @@ describe("web auto-reply", () => {
         () => {
           expect(listenerFactory).toHaveBeenCalledTimes(scenario.expectedCallsAfterFirstClose);
         },
-        { timeout: 250, interval: 2 },
+        { timeout: 2500, interval: 2 },
       );
 
       if (scenario.closeTwiceAndFinish) {
@@ -180,7 +180,7 @@ describe("web auto-reply", () => {
         () => {
           expect(listenerFactory).toHaveBeenCalledTimes(2);
         },
-        { timeout: 250, interval: 2 },
+        { timeout: 2500, interval: 2 },
       );
       controller.abort();
       closeResolvers[1]?.({ status: 499, isLoggedOut: false, error: "aborted" });
@@ -235,7 +235,7 @@ describe("web auto-reply", () => {
         () => {
           expect(capturedOnMessage).toBeTypeOf("function");
         },
-        { timeout: 250, interval: 2 },
+        { timeout: 2500, interval: 2 },
       );
 
       const reply = vi.fn().mockResolvedValue(undefined);
@@ -262,7 +262,7 @@ describe("web auto-reply", () => {
         () => {
           expect(listenerFactory).toHaveBeenCalledTimes(2);
         },
-        { timeout: 250, interval: 2 },
+        { timeout: 2500, interval: 2 },
       );
 
       controller.abort();

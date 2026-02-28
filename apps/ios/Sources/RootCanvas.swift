@@ -27,7 +27,7 @@ struct RootCanvas: View {
     @State private var didAutoOpenSettings: Bool = false
     @State private var showQuickSetup: Bool = false
 
-    // Toast state (restored for global feedback)
+    // Toast state
     @State private var voiceWakeToastText: String?
     @State private var toastDismissTask: Task<Void, Never>?
 
@@ -35,7 +35,7 @@ struct RootCanvas: View {
         ZStack {
             // Main App Navigation
             RootTabs()
-                .preferredColorScheme(.light)
+                .preferredColorScheme(.dark) // Fixed: Enforce dark mode for status bar legibility
 
             // Global Overlays
             if self.appModel.cameraFlashNonce != 0 {
@@ -51,11 +51,11 @@ struct RootCanvas: View {
             if let voiceWakeToastText, !voiceWakeToastText.isEmpty {
                 VoiceWakeToast(
                     command: voiceWakeToastText,
-                    brighten: self.systemColorScheme == .light)
+                    brighten: false) // Fixed: Dark theme means we don't brighten for contrast
                     .padding(.leading, 10)
                     .safeAreaPadding(.top, 58)
                     .transition(.move(edge: .top).combined(with: .opacity))
-                    .zIndex(100) // Ensure it floats above everything
+                    .zIndex(100)
             }
         }
         .gatewayTrustPromptAlert()
