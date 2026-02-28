@@ -66,8 +66,17 @@ function isTrustedShellPath(shell: string): boolean {
   return registeredShells?.has(shell) === true;
 }
 
-function resolveShell(env: NodeJS.ProcessEnv): string {
-  const shell = env.SHELL?.trim();
+function getUserShell(): string | null {
+  try {
+    const { shell } = os.userInfo();
+    return shell && shell.trim().length > 0 ? shell.trim() : null;
+  } catch {
+    return null;
+  }
+}
+
+function resolveShell(): string {
+  const shell = getUserShell();
   if (shell && isTrustedShellPath(shell)) {
     return shell;
   }
@@ -121,7 +130,7 @@ function probeLoginShellEnv(params: {
 }): LoginShellEnvProbeResult {
   const exec = params.exec ?? execFileSync;
   const timeoutMs = resolveTimeoutMs(params.timeoutMs);
-  const shell = resolveShell(params.env);
+  const shell = resolveShell();
   const execEnv = resolveShellExecEnv(params.env);
 
   try {
