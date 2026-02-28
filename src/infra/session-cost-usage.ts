@@ -409,7 +409,9 @@ export async function discoverAllSessions(params?: {
   );
 
   const discovered: DiscoveredSession[] = [];
-  const filesToProcess = entriesWithStats.filter((item): item is NonNullable<typeof item> => Boolean(item));
+  const filesToProcess = entriesWithStats.filter((item): item is NonNullable<typeof item> =>
+    Boolean(item),
+  );
 
   // Process files in batches to avoid EMFILE errors
   const BATCH_SIZE = 50;
@@ -459,7 +461,7 @@ export async function discoverAllSessions(params?: {
           mtime: stats.mtimeMs,
           firstUserMessage,
         };
-      })
+      }),
     );
 
     discovered.push(...results);

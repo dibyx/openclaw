@@ -82,7 +82,9 @@ export function collectTelegramAllowFromLists(
   return refs;
 }
 
-export function scanTelegramAllowFromUsernameEntries(cfg: OpenClawConfig): TelegramAllowFromUsernameHit[] {
+export function scanTelegramAllowFromUsernameEntries(
+  cfg: OpenClawConfig,
+): TelegramAllowFromUsernameHit[] {
   const hits: TelegramAllowFromUsernameHit[] = [];
 
   const scanList = (pathLabel: string, list: unknown) => {
