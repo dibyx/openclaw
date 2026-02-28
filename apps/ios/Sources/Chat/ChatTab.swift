@@ -5,7 +5,7 @@ import SwiftUI
 struct ChatTab: View {
     @Environment(NodeAppModel.self) private var appModel
     @State private var viewModel: OpenClawChatViewModel?
-    private let userAccent = Color(red: 29/255, green: 93/255, blue: 216/255)
+    private let userAccent = Color.openClawAccent
 
     var body: some View {
         NavigationStack {
