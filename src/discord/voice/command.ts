@@ -24,7 +24,10 @@ import {
   resolveDiscordMemberAccessState,
 } from "../monitor/allow-list.js";
 import { resolveDiscordChannelInfo } from "../monitor/message-utils.js";
-import { resolveDiscordSenderIdentity } from "../monitor/sender-identity.js";
+import {
+  resolveDiscordSenderIdentity,
+  type DiscordMemberLike,
+} from "../monitor/sender-identity.js";
 import { resolveDiscordThreadParentInfo } from "../monitor/threading.js";
 import type { DiscordVoiceManager } from "./manager.js";
 
@@ -150,7 +153,10 @@ async function authorizeVoiceCommand(
   const memberRoleIds = Array.isArray(interaction.rawData.member?.roles)
     ? interaction.rawData.member.roles.map((roleId: string) => String(roleId))
     : [];
-  const sender = resolveDiscordSenderIdentity({ author: user, member: interaction.rawData.member });
+  const sender = resolveDiscordSenderIdentity({
+    author: user,
+    member: interaction.rawData.member as unknown as DiscordMemberLike,
+  });
 
   const { hasAccessRestrictions, memberAllowed } = resolveDiscordMemberAccessState({
     channelConfig,

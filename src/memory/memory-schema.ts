@@ -6,6 +6,19 @@ export function ensureMemoryIndexSchema(params: {
   ftsTable: string;
   ftsEnabled: boolean;
 }): { ftsAvailable: boolean; ftsError?: string } {
+  // Validate table names to prevent SQL injection
+  const identifierPattern = /^[a-zA-Z0-9_]+$/;
+  if (!identifierPattern.test(params.embeddingCacheTable)) {
+    throw new Error(
+      `Invalid embedding cache table name: "${params.embeddingCacheTable}". Only alphanumeric characters and underscores are allowed.`,
+    );
+  }
+  if (!identifierPattern.test(params.ftsTable)) {
+    throw new Error(
+      `Invalid FTS table name: "${params.ftsTable}". Only alphanumeric characters and underscores are allowed.`,
+    );
+  }
+
   params.db.exec(`
     CREATE TABLE IF NOT EXISTS meta (
       key TEXT PRIMARY KEY,
