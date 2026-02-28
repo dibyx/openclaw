@@ -45,6 +45,11 @@ async function getRunReplyAgent() {
   return await runReplyAgentPromise;
 }
 
+vi.mock("../../config/sessions.js", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../config/sessions.js")>();
+  return { ...actual };
+});
+
 vi.mock("../../agents/model-fallback.js", () => ({
   runWithModelFallback: async ({
     provider,
