@@ -166,21 +166,25 @@ async function collectServiceFiles(params: {
 }): Promise<ServiceFileEntry[]> {
   const out: ServiceFileEntry[] = [];
   const entries = await readDirEntries(params.dir);
-  for (const entry of entries) {
-    if (!entry.endsWith(params.extension)) {
-      continue;
-    }
-    const name = entry.slice(0, -params.extension.length);
-    if (params.isIgnoredName(name)) {
-      continue;
-    }
-    const fullPath = path.join(params.dir, entry);
-    const contents = await readUtf8File(fullPath);
-    if (contents === null) {
-      continue;
-    }
-    out.push({ entry, name, fullPath, contents });
-  }
+
+  await Promise.all(
+    entries.map(async (entry) => {
+      if (!entry.endsWith(params.extension)) {
+        return;
+      }
+      const name = entry.slice(0, -params.extension.length);
+      if (params.isIgnoredName(name)) {
+        return;
+      }
+      const fullPath = path.join(params.dir, entry);
+      const contents = await readUtf8File(fullPath);
+      if (contents === null) {
+        return;
+      }
+      out.push({ entry, name, fullPath, contents });
+    }),
+  );
+
   return out;
 }
 
@@ -330,24 +334,28 @@ export async function findExtraGatewayServices(
   if (process.platform === "darwin") {
     try {
       const home = resolveHomeDir(env);
+      const tasks: Promise<ExtraGatewayService[]>[] = [];
       const userDir = path.join(home, "Library", "LaunchAgents");
-      for (const svc of await scanLaunchdDir({
+
+      tasks.push(scanLaunchdDir({
         dir: userDir,
         scope: "user",
-      })) {
-        push(svc);
-      }
+      }));
+
       if (opts.deep) {
-        for (const svc of await scanLaunchdDir({
+        tasks.push(scanLaunchdDir({
           dir: path.join(path.sep, "Library", "LaunchAgents"),
           scope: "system",
-        })) {
-          push(svc);
-        }
-        for (const svc of await scanLaunchdDir({
+        }));
+        tasks.push(scanLaunchdDir({
           dir: path.join(path.sep, "Library", "LaunchDaemons"),
           scope: "system",
-        })) {
+        }));
+      }
+
+      const scanResults = await Promise.all(tasks);
+      for (const group of scanResults) {
+        for (const svc of group) {
           push(svc);
         }
       }
@@ -360,25 +368,31 @@ export async function findExtraGatewayServices(
   if (process.platform === "linux") {
     try {
       const home = resolveHomeDir(env);
+      const tasks: Promise<ExtraGatewayService[]>[] = [];
       const userDir = path.join(home, ".config", "systemd", "user");
-      for (const svc of await scanSystemdDir({
+
+      tasks.push(scanSystemdDir({
         dir: userDir,
         scope: "user",
-      })) {
-        push(svc);
-      }
+      }));
+
       if (opts.deep) {
         for (const dir of [
           "/etc/systemd/system",
           "/usr/lib/systemd/system",
           "/lib/systemd/system",
         ]) {
-          for (const svc of await scanSystemdDir({
+          tasks.push(scanSystemdDir({
             dir,
             scope: "system",
-          })) {
-            push(svc);
-          }
+          }));
+        }
+      }
+
+      const scanResults = await Promise.all(tasks);
+      for (const group of scanResults) {
+        for (const svc of group) {
+          push(svc);
         }
       }
     } catch {
