@@ -111,18 +111,28 @@ EXAMPLE_SCRIPT = '''#!/usr/bin/env python3
 """
 Example helper script for {skill_name}
 
-This is a placeholder script that can be executed directly.
-Replace with actual implementation or delete if not needed.
-
-Example real scripts from other skills:
-- pdf/scripts/fill_fillable_fields.py - Fills PDF form fields
-- pdf/scripts/convert_pdf_to_images.py - Converts PDF pages to images
+This script demonstrates how to parse arguments and perform a simple action.
+Replace this logic with your actual skill implementation.
 """
 
+import argparse
+import sys
+
 def main():
-    print("This is an example script for {skill_name}")
-    # TODO: Add actual script logic here
-    # This could be data processing, file conversion, API calls, etc.
+    parser = argparse.ArgumentParser(description="Example script for {skill_name}")
+    parser.add_argument("input", help="Input string to process")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")
+
+    args = parser.parse_args()
+
+    if args.verbose:
+        print(f"Verbose mode enabled. Processing '{{args.input}}'...")
+
+    # Example logic: Reverse the input string
+    result = args.input[::-1]
+
+    print(f"Original: {{args.input}}")
+    print(f"Reversed: {{result}}")
 
 if __name__ == "__main__":
     main()
