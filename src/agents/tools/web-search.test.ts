@@ -235,7 +235,6 @@ describe("web_search grok response parsing", () => {
     expect(result.annotationCitations).toEqual(["https://example.com/a", "https://example.com/b"]);
   });
 
-
   it("returns undefined text when no content found", () => {
     const result = extractGrokContent({});
     expect(result.text).toBeUndefined();

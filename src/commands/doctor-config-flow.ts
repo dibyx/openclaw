@@ -1,25 +1,14 @@
 import { formatCliCommand } from "../cli/command-format.js";
 import type { OpenClawConfig } from "../config/config.js";
-import {
-  CONFIG_PATH,
-  migrateLegacyConfig,
-  readConfigFileSnapshot,
-} from "../config/config.js";
+import { CONFIG_PATH, migrateLegacyConfig, readConfigFileSnapshot } from "../config/config.js";
 import { applyPluginAutoEnable } from "../config/plugin-auto-enable.js";
 import { note } from "../terminal/note.js";
-import { normalizeLegacyConfigValues } from "./doctor-legacy-config.js";
-import type { DoctorOptions } from "./doctor-prompter.js";
-import { autoMigrateLegacyStateDir } from "./doctor-state-migrations.js";
-
 // Imported from refactored modules
 import {
-  collectDiscordAccountScopes,
-  collectDiscordIdLists,
   maybeRepairDiscordNumericIds,
   scanDiscordNumericIdEntries,
 } from "./doctor-config/discord.js";
 import {
-  collectExecSafeBinScopes,
   maybeRepairExecSafeBinProfiles,
   scanExecSafeBinCoverage,
   scanExecSafeBinTrustedDirHints,
@@ -40,6 +29,9 @@ import {
   scanTelegramAllowFromUsernameEntries,
 } from "./doctor-config/telegram.js";
 import { stripUnknownConfigKeys } from "./doctor-config/utils.js";
+import { normalizeLegacyConfigValues } from "./doctor-legacy-config.js";
+import type { DoctorOptions } from "./doctor-prompter.js";
+import { autoMigrateLegacyStateDir } from "./doctor-state-migrations.js";
 
 export async function loadAndMaybeMigrateDoctorConfig(params: {
   options: DoctorOptions;

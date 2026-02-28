@@ -337,20 +337,26 @@ export async function findExtraGatewayServices(
       const tasks: Promise<ExtraGatewayService[]>[] = [];
       const userDir = path.join(home, "Library", "LaunchAgents");
 
-      tasks.push(scanLaunchdDir({
-        dir: userDir,
-        scope: "user",
-      }));
+      tasks.push(
+        scanLaunchdDir({
+          dir: userDir,
+          scope: "user",
+        }),
+      );
 
       if (opts.deep) {
-        tasks.push(scanLaunchdDir({
-          dir: path.join(path.sep, "Library", "LaunchAgents"),
-          scope: "system",
-        }));
-        tasks.push(scanLaunchdDir({
-          dir: path.join(path.sep, "Library", "LaunchDaemons"),
-          scope: "system",
-        }));
+        tasks.push(
+          scanLaunchdDir({
+            dir: path.join(path.sep, "Library", "LaunchAgents"),
+            scope: "system",
+          }),
+        );
+        tasks.push(
+          scanLaunchdDir({
+            dir: path.join(path.sep, "Library", "LaunchDaemons"),
+            scope: "system",
+          }),
+        );
       }
 
       const scanResults = await Promise.all(tasks);
@@ -371,10 +377,12 @@ export async function findExtraGatewayServices(
       const tasks: Promise<ExtraGatewayService[]>[] = [];
       const userDir = path.join(home, ".config", "systemd", "user");
 
-      tasks.push(scanSystemdDir({
-        dir: userDir,
-        scope: "user",
-      }));
+      tasks.push(
+        scanSystemdDir({
+          dir: userDir,
+          scope: "user",
+        }),
+      );
 
       if (opts.deep) {
         for (const dir of [
@@ -382,10 +390,12 @@ export async function findExtraGatewayServices(
           "/usr/lib/systemd/system",
           "/lib/systemd/system",
         ]) {
-          tasks.push(scanSystemdDir({
-            dir,
-            scope: "system",
-          }));
+          tasks.push(
+            scanSystemdDir({
+              dir,
+              scope: "system",
+            }),
+          );
         }
       }
 
