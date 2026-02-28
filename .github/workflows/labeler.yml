@@ -23,10 +23,12 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    if: ${{ secrets.GH_APP_PRIVATE_KEY != '' }}
     runs-on: ubuntu-latest
+    env:
+      HAS_SECRET: ${{ secrets.GH_APP_PRIVATE_KEY != '' }}
     steps:
-      - uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
+      - if: env.HAS_SECRET == 'true'
+        uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
         id: app-token
         with:
           app-id: "2729701"
@@ -201,10 +203,12 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    if: ${{ secrets.GH_APP_PRIVATE_KEY != '' }}
     runs-on: ubuntu-latest
+    env:
+      HAS_SECRET: ${{ secrets.GH_APP_PRIVATE_KEY != '' }}
     steps:
-      - uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
+      - if: env.HAS_SECRET == 'true'
+        uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
         id: app-token
         with:
           app-id: "2729701"
@@ -442,10 +446,12 @@ jobs:
   label-issues:
     permissions:
       issues: write
-    if: ${{ secrets.GH_APP_PRIVATE_KEY != '' }}
     runs-on: ubuntu-latest
+    env:
+      HAS_SECRET: ${{ secrets.GH_APP_PRIVATE_KEY != '' }}
     steps:
-      - uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
+      - if: env.HAS_SECRET == 'true'
+        uses: actions/create-github-app-token@d72941d797fd3113feb6b93fd0dec494b13a2547 # v1
         id: app-token
         with:
           app-id: "2729701"
