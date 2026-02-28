@@ -657,11 +657,21 @@ export abstract class MemoryManagerSyncOps {
       });
     }
 
+    // Optimization: Pre-fetch all existing file hashes in one query instead of N queries
+    const existingFileRows = this.db
+      .prepare(`SELECT path, hash FROM files WHERE source = ?`)
+      .all("memory") as Array<{ path: string; hash: string }>;
+
+    const existingFileMap = new Map<string, string>();
+    for (const row of existingFileRows) {
+      existingFileMap.set(row.path, row.hash);
+    }
+
     const tasks = fileEntries.map((entry) => async () => {
-      const record = this.db
-        .prepare(`SELECT hash FROM files WHERE path = ? AND source = ?`)
-        .get(entry.path, "memory") as { hash: string } | undefined;
-      if (!params.needsFullReindex && record?.hash === entry.hash) {
+      // Use the in-memory map instead of a DB query
+      const existingHash = existingFileMap.get(entry.path);
+
+      if (!params.needsFullReindex && existingHash === entry.hash) {
         if (params.progress) {
           params.progress.completed += 1;
           params.progress.report({
