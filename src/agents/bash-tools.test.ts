@@ -417,7 +417,6 @@ describe("exec tool backgrounding", () => {
       const result = await executeExecCommand(
         execTool,
         joinCommands([yieldDelayCmd, shellEcho(OUTPUT_DONE)]),
-        { yieldMs: 10 },
       );
 
       // Timing can race here: command may already be complete before the first response.
