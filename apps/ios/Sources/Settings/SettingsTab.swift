@@ -43,7 +43,9 @@ struct SettingsTab: View {
                         help: "Keeps the screen awake while OpenClaw is open.")
 
                     TextField("Device Name", text: self.$displayName)
+                        .listRowBackground(Color.openClawSurface)
                 }
+                .listRowBackground(Color.openClawSurface)
 
                 Section("Voice & Talk") {
                     self.featureToggle(
@@ -68,7 +70,9 @@ struct SettingsTab: View {
                     NavigationLink("Wake Words") {
                         VoiceWakeWordsSettingsView()
                     }
+                    .listRowBackground(Color.openClawSurface)
                 }
+                .listRowBackground(Color.openClawSurface)
 
                 Section("Permissions") {
                     self.featureToggle(
@@ -81,26 +85,36 @@ struct SettingsTab: View {
                         Text("While Using").tag(OpenClawLocationMode.whileUsing.rawValue)
                         Text("Always").tag(OpenClawLocationMode.always.rawValue)
                     }
+                    .listRowBackground(Color.openClawSurface)
                 }
+                .listRowBackground(Color.openClawSurface)
 
                 Section("Share to Agent") {
                     TextField("Default Instruction", text: self.$defaultShareInstruction, axis: .vertical)
                         .lineLimit(2...4)
+                        .listRowBackground(Color.openClawSurface)
                     Text("Appended to content shared from other apps.")
                         .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.openClawSecondaryText)
+                        .listRowBackground(Color.clear)
                 }
+                .listRowBackground(Color.openClawSurface)
 
                 Section("About") {
                     LabeledContent("Version", value: DeviceInfoHelper.openClawVersionString())
+                        .listRowBackground(Color.openClawSurface)
                     LabeledContent("Instance ID", value: self.instanceId)
                         .lineLimit(1)
                         .truncationMode(.middle)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.openClawSecondaryText)
                         .font(.caption)
+                        .listRowBackground(Color.openClawSurface)
                 }
+                .listRowBackground(Color.openClawSurface)
             }
             .navigationTitle("Settings")
+            .scrollContentBackground(.hidden) // Key fix for dark theme list
+            .background(Color.openClawBackground)
             .alert(item: self.$activeFeatureHelp) { help in
                 Alert(
                     title: Text(help.title),
@@ -147,7 +161,7 @@ struct SettingsTab: View {
                 self.activeFeatureHelp = FeatureHelp(title: title, message: help)
             } label: {
                 Image(systemName: "info.circle")
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.openClawSecondaryText)
             }
             .buttonStyle(.plain)
         }

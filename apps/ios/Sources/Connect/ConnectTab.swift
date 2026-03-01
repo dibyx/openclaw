@@ -11,7 +11,8 @@ struct ConnectTab: View {
     @AppStorage("gateway.setupCode") private var setupCode: String = ""
     @AppStorage("node.instanceId") private var instanceId: String = UUID().uuidString
 
-    @State private var gatewayExpanded: Bool = false
+    // Expanded by default
+    @State private var gatewayExpanded: Bool = true
     @State private var connecting: Bool = false
     @State private var connectingGatewayID: String?
     @State private var connectError: String?
@@ -26,25 +27,41 @@ struct ConnectTab: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Connection Control")
                             .font(.headline)
-                            .foregroundStyle(.blue) // Accent color
+                            .foregroundStyle(Color.openClawAccent)
                         Text("Gateway Connection")
                             .font(.title2.bold())
+                            .foregroundStyle(Color.openClawText)
                         Text("One primary action. Open advanced controls only when needed.")
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Color.openClawSecondaryText)
                     }
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
                     .padding(.bottom, 8)
 
-                    LabeledContent("Active endpoint", value: self.activeEndpoint)
-                    LabeledContent("Gateway state", value: self.appModel.gatewayStatusText)
+                    LabeledContent {
+                        Text(self.activeEndpoint)
+                            .foregroundStyle(Color.openClawText)
+                    } label: {
+                        Text("Active endpoint")
+                            .foregroundStyle(Color.openClawSecondaryText)
+                    }
+
+                    LabeledContent {
+                        Text(self.appModel.gatewayStatusText)
+                            .foregroundStyle(Color.openClawText)
+                    } label: {
+                        Text("Gateway state")
+                            .foregroundStyle(Color.openClawSecondaryText)
+                    }
 
                     Button {
-                        if self.isGatewayConnected {
-                            self.appModel.disconnectGateway()
-                        } else {
-                            Task { await self.connectManual() }
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            if self.isGatewayConnected {
+                                self.appModel.disconnectGateway()
+                            } else {
+                                Task { await self.connectManual() }
+                            }
                         }
                     } label: {
                         HStack {
@@ -60,93 +77,119 @@ struct ConnectTab: View {
                             Spacer()
                         }
                         .padding()
-                        .background(self.isGatewayConnected ? Color.red : Color.blue)
+                        .background(self.isGatewayConnected ? Color.red : Color.openClawAccent)
                         .foregroundStyle(.white)
                         .clipShape(RoundedRectangle(cornerRadius: 18))
+                        .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
                     }
                     .listRowBackground(Color.clear)
                     .listRowInsets(EdgeInsets())
                     .padding(.vertical, 8)
 
                     if let error = self.connectError {
-                        Text(error)
-                            .font(.caption)
-                            .foregroundStyle(.red)
-                            .listRowBackground(Color.clear)
-                    }
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(error)
+                                .font(.caption)
+                                .foregroundStyle(.red)
 
-                    DisclosureGroup("Advanced controls", isExpanded: self.$gatewayExpanded) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Setup Code")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-
-                            HStack {
-                                TextField("Paste setup code", text: self.$setupCode)
-                                    .textFieldStyle(.roundedBorder)
-                                    .textInputAutocapitalization(.never)
-                                    .autocorrectionDisabled()
-
-                                Button("Apply") {
-                                    self.applySetupCode()
-                                }
-                                .buttonStyle(.bordered)
-                                .disabled(self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            // Restore helpful hint logic
+                            if error.localizedCaseInsensitiveContains("timed out") ||
+                               error.localizedCaseInsensitiveContains("host is down") {
+                                Text("Check if Tailscale is connected.")
+                                    .font(.caption2)
+                                    .foregroundStyle(Color.openClawSecondaryText)
                             }
-
-                            if let status = self.setupStatusText {
-                                Text(status)
-                                    .font(.caption)
-                                    .foregroundStyle(status.lowercased().contains("failed") ? .red : .secondary)
-                            }
-
-                            Divider()
-
-                            Text("Manual Connection")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(.secondary)
-
-                            HStack {
-                                TextField("Host", text: self.$manualGatewayHost)
-                                    .textFieldStyle(.roundedBorder)
-                                    .textInputAutocapitalization(.never)
-                                    .autocorrectionDisabled()
-                                TextField("Port", value: self.$manualGatewayPort, format: .number.grouping(.never))
-                                    .textFieldStyle(.roundedBorder)
-                                    .keyboardType(.numberPad)
-                                    .frame(width: 80)
-                            }
-
-                            Toggle("Use TLS", isOn: self.$manualGatewayTLS)
-
-                            TextField("Token (optional)", text: self.$gatewayToken)
-                                .textFieldStyle(.roundedBorder)
-                                .textInputAutocapitalization(.never)
-                                .autocorrectionDisabled()
-                                .onChange(of: self.gatewayToken) { _, newValue in
-                                    self.saveCredentials(token: newValue, password: self.gatewayPassword)
-                                }
-
-                            SecureField("Password (optional)", text: self.$gatewayPassword)
-                                .textFieldStyle(.roundedBorder)
-                                .onChange(of: self.gatewayPassword) { _, newValue in
-                                    self.saveCredentials(token: self.gatewayToken, password: newValue)
-                                }
                         }
-                        .padding(.vertical, 8)
+                        .listRowBackground(Color.clear)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
+
+                    DisclosureGroup(
+                        isExpanded: self.$gatewayExpanded,
+                        content: {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Setup Code")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(Color.openClawSecondaryText)
+
+                                HStack {
+                                    TextField("Paste setup code", text: self.$setupCode)
+                                        .textFieldStyle(.roundedBorder)
+                                        .textInputAutocapitalization(.never)
+                                        .autocorrectionDisabled()
+
+                                    Button("Apply") {
+                                        withAnimation {
+                                            self.applySetupCode()
+                                        }
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .disabled(self.setupCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                                }
+
+                                if let status = self.setupStatusText {
+                                    Text(status)
+                                        .font(.caption)
+                                        .foregroundStyle(status.lowercased().contains("failed") ? .red : Color.openClawSecondaryText)
+                                        .transition(.opacity)
+                                }
+
+                                Divider()
+                                    .overlay(Color.openClawSecondaryText.opacity(0.2))
+
+                                Text("Manual Connection")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(Color.openClawSecondaryText)
+
+                                HStack {
+                                    TextField("Host", text: self.$manualGatewayHost)
+                                        .textFieldStyle(.roundedBorder)
+                                        .textInputAutocapitalization(.never)
+                                        .autocorrectionDisabled()
+                                    TextField("Port", value: self.$manualGatewayPort, format: .number.grouping(.never))
+                                        .textFieldStyle(.roundedBorder)
+                                        .keyboardType(.numberPad)
+                                        .frame(width: 80)
+                                }
+
+                                Toggle("Use TLS", isOn: self.$manualGatewayTLS)
+                                    .foregroundStyle(Color.openClawText)
+
+                                TextField("Token (optional)", text: self.$gatewayToken)
+                                    .textFieldStyle(.roundedBorder)
+                                    .textInputAutocapitalization(.never)
+                                    .autocorrectionDisabled()
+                                    .onChange(of: self.gatewayToken) { _, newValue in
+                                        self.saveCredentials(token: newValue, password: self.gatewayPassword)
+                                    }
+
+                                SecureField("Password (optional)", text: self.$gatewayPassword)
+                                    .textFieldStyle(.roundedBorder)
+                                    .onChange(of: self.gatewayPassword) { _, newValue in
+                                        self.saveCredentials(token: self.gatewayToken, password: newValue)
+                                    }
+                            }
+                            .padding(.vertical, 8)
+                        },
+                        label: {
+                            Text("Advanced controls")
+                                .foregroundStyle(Color.openClawText)
+                        }
+                    )
                 }
+                .listRowBackground(Color.openClawSurface)
 
                 if !self.gatewayController.gateways.isEmpty {
-                    Section("Discovered Gateways") {
+                    Section {
                         ForEach(self.gatewayController.gateways) { gateway in
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(gateway.name)
                                         .font(.headline)
+                                        .foregroundStyle(Color.openClawText)
                                     Text(gateway.stableID)
                                         .font(.caption)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(Color.openClawSecondaryText)
                                 }
                                 Spacer()
                                 Button("Connect") {
@@ -156,11 +199,16 @@ struct ConnectTab: View {
                                 .disabled(self.connectingGatewayID != nil)
                             }
                         }
+                    } header: {
+                        Text("Discovered Gateways")
+                            .foregroundStyle(Color.openClawSecondaryText)
                     }
+                    .listRowBackground(Color.openClawSurface)
                 }
             }
             .navigationBarHidden(true)
-            .background(Color(red: 246/255, green: 247/255, blue: 250/255)) // Surface color
+            .background(Color.openClawBackground)
+            .scrollContentBackground(.hidden)
             .onAppear {
                 self.loadCredentials()
             }
@@ -202,14 +250,18 @@ struct ConnectTab: View {
     }
 
     private func connectManual() async {
-        self.connecting = true
-        self.connectError = nil
+        withAnimation {
+            self.connecting = true
+            self.connectError = nil
+        }
         self.manualGatewayEnabled = true
 
         // Basic validation
         guard !self.manualGatewayHost.isEmpty else {
-            self.connectError = "Host is required"
-            self.connecting = false
+            withAnimation {
+                self.connectError = "Host is required"
+                self.connecting = false
+            }
             return
         }
 
@@ -220,10 +272,11 @@ struct ConnectTab: View {
 
         // Wait a beat for status update
         try? await Task.sleep(nanoseconds: 500_000_000)
-        self.connecting = false
-
-        if !self.isGatewayConnected {
-             self.connectError = self.appModel.gatewayStatusText
+        withAnimation {
+            self.connecting = false
+            if !self.isGatewayConnected {
+                 self.connectError = self.appModel.gatewayStatusText
+            }
         }
     }
 
