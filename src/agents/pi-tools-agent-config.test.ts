@@ -625,6 +625,7 @@ describe("Agent-specific tool filtering", () => {
 
     const result = await execTool?.execute("call1", {
       command: "echo done",
+      yieldMs: 10,
     });
 
     const resultDetails = result?.details as { status?: string } | undefined;
@@ -688,6 +689,7 @@ describe("Agent-specific tool filtering", () => {
     expect(mainExecTool).toBeDefined();
     const mainResult = await mainExecTool!.execute("call-main-default", {
       command: "echo done",
+      yieldMs: 1000,
     });
     const mainDetails = mainResult?.details as { status?: string } | undefined;
     expect(mainDetails?.status).toBe("completed");
@@ -709,12 +711,14 @@ describe("Agent-specific tool filtering", () => {
     await expect(
       helperExecTool!.execute("call-helper-default", {
         command: "echo done",
+        yieldMs: 1000,
       }),
     ).rejects.toThrow("exec host=sandbox is configured");
     await expect(
       helperExecTool!.execute("call-helper", {
         command: "echo done",
         host: "sandbox",
+        yieldMs: 1000,
       }),
     ).rejects.toThrow("exec host=sandbox is configured");
   });
@@ -733,6 +737,7 @@ describe("Agent-specific tool filtering", () => {
     expect(execTool).toBeDefined();
     const result = await execTool!.execute("call-main-opaque-session", {
       command: "echo done",
+      yieldMs: 1000,
     });
     const details = result?.details as { status?: string } | undefined;
     expect(details?.status).toBe("completed");
