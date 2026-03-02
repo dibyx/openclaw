@@ -56,9 +56,8 @@ function isTrustedShellPath(shell: string): boolean {
   if (!path.isAbsolute(shell)) {
     return false;
   }
-  // On Windows, normalize converts / to \. Skip this check on Windows for mock tests, or normalize both ways.
-  const normalized = path.normalize(shell).replace(/\\/g, "/");
-  if (normalized !== shell.replace(/\\/g, "/")) {
+  const normalized = path.normalize(shell);
+  if (normalized !== shell) {
     return false;
   }
 

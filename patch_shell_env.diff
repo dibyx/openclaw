@@ -1,0 +1,13 @@
+--- src/infra/shell-env.ts
++++ src/infra/shell-env.ts
+@@ -56,7 +56,8 @@
+   if (!path.isAbsolute(shell)) {
+     return false;
+   }
+-  const normalized = path.normalize(shell);
++  // On Windows, normalize converts / to \. Skip this check on Windows for mock tests, or normalize both ways.
++  const normalized = path.normalize(shell).replace(/\\/g, "/");
+-  if (normalized !== shell) {
++  if (normalized !== shell.replace(/\\/g, "/")) {
+     return false;
+   }
